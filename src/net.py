@@ -51,7 +51,7 @@ class Net(object):
         pred_flow = model['flow']
 
         saver = tf.train.Saver()
-
+        
         with tf.Session() as sess:
             input_a = self.getGoodInput(input_a_path)
             input_b = self.getGoodInput(input_b_path)
