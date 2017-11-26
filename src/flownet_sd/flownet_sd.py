@@ -14,6 +14,7 @@ class FlowNetSD(Net):
     def model(self, inputs, training_schedule, trainable=True):
         _, height, width, _ = inputs['input_a'].shape.as_list()
         with tf.variable_scope('FlowNetSD'):
+		#dffefeefefefefefe
             concat_inputs = tf.concat([inputs['input_a'], inputs['input_b']], axis=3)
             with slim.arg_scope([slim.conv2d, slim.conv2d_transpose],
                                 # Only backprop this network if trainable
