@@ -38,45 +38,38 @@ class Net(object):
         """
         return
 
+    def getGoodInput(self, path):
+        input = imread(path)
+        input = input[...,[2,1,0]]
+        if input.max() > 1.0:
+            input = input /255.0
+        return input
+
     def test(self, checkpoint, input_a_path, input_b_path, out_path, save_image=True, save_flo=False):
-        input_a = imread(input_a_path)
-        input_b = imread(input_b_path)
-
-        # Convert from RGB -> BGR
-        input_a = input_a[..., [2, 1, 0]]
-        input_b = input_b[..., [2, 1, 0]]
-
-        # Scale from [0, 255] -> [0.0, 1.0] if needed
-        if input_a.max() > 1.0:
-            input_a = input_a / 255.0
-        if input_b.max() > 1.0:
-            input_b = input_b / 255.0
-
-        # TODO: This is a hack, we should get rid of this
-        training_schedule = LONG_SCHEDULE
-
-        inputs = {
-            'input_a': tf.expand_dims(tf.constant(input_a, dtype=tf.float32), 0),
-            'input_b': tf.expand_dims(tf.constant(input_b, dtype=tf.float32), 0),
-        }
-        predictions = self.model(inputs, training_schedule)
-        pred_flow = predictions['flow']
+        pred_flow = self.result['flow']
 
         saver = tf.train.Saver()
+        dirPath = "/media/el/Data/KITTI/odom/dataset/sequences/00/res_2/"
 
         with tf.Session() as sess:
-            saver.restore(sess, checkpoint)
-            pred_flow = sess.run(pred_flow)[0, :, :, :]
+            for i in range (1, 15):
+                fNameA = dirPath + str(i-1) + ".png"
+                fNameB = dirPath + str(i) + ".png"
+                input_a = self.getGoodInput(fNameA)
+                input_b = self.getGoodInput(fNameB)
 
-            unique_name = 'flow-' + str(uuid.uuid4())
-            if save_image:
-                flow_img = flow_to_image(pred_flow)
-                full_out_path = os.path.join(out_path, unique_name + '.png')
-                imsave(full_out_path, flow_img)
+                saver.restore(sess, checkpoint)
+                result = sess.run(pred_flow, feed_dict = {self.input_a: input_a, self.input_b: input_b})
+                result = result[0, :, :, :]
 
-            if save_flo:
-                full_out_path = os.path.join(out_path, unique_name + '.flo')
-                write_flow(pred_flow, full_out_path)
+                if save_image:
+                    flow_img = flow_to_image(result)
+                    full_out_path = os.path.join(out_path, str(i) + '.png')
+                    imsave(full_out_path, flow_img)
+
+                if save_flo:
+                    full_out_path = os.path.join(out_path, str(i) + '.flo')
+                    write_flow(result, full_out_path)
 
     def train(self, log_dir, training_schedule, input_a, input_b, flow, checkpoints=None):
         tf.summary.image("image_a", input_a, max_outputs=2)

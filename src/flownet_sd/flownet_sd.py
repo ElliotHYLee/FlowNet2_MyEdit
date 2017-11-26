@@ -3,6 +3,7 @@ from ..utils import LeakyReLU, average_endpoint_error, pad, antipad
 from ..downsample import downsample
 import math
 import tensorflow as tf
+from ..training_schedules import LONG_SCHEDULE
 slim = tf.contrib.slim
 
 
@@ -10,11 +11,21 @@ class FlowNetSD(Net):
 
     def __init__(self, mode=Mode.TRAIN, debug=False):
         super(FlowNetSD, self).__init__(mode=mode, debug=debug)
+        self.model(None, LONG_SCHEDULE)
+
 
     def model(self, inputs, training_schedule, trainable=True):
-        _, height, width, _ = inputs['input_a'].shape.as_list()
+        w = 512
+        h = 384
+        c = 3
+        self.input_a = tf.placeholder(tf.float32, [h, w, c])
+        self.input_b = tf.placeholder(tf.float32, [h, w, c])
+        self.X1 = tf.expand_dims(self.input_a, 0)
+        self.X2 = tf.expand_dims(self.input_b, 0)
+        self.X = concat_inputs = tf.concat([self.X1, self.X2], axis=3)
         with tf.variable_scope('FlowNetSD'):
-            concat_inputs = tf.concat([inputs['input_a'], inputs['input_b']], axis=3)
+            #concat_inputs = tf.concat([inputs['input_a'], inputs['input_b']], axis=3)
+
             with slim.arg_scope([slim.conv2d, slim.conv2d_transpose],
                                 # Only backprop this network if trainable
                                 trainable=trainable,
@@ -26,7 +37,7 @@ class FlowNetSD(Net):
 
                 weights_regularizer = slim.l2_regularizer(training_schedule['weight_decay'])
                 with slim.arg_scope([slim.conv2d], weights_regularizer=weights_regularizer):
-                    conv0 = slim.conv2d(pad(concat_inputs), 64, 3, scope='conv0')
+                    conv0 = slim.conv2d(pad(self.X), 64, 3, scope='conv0')
                     conv1 = slim.conv2d(pad(conv0), 64, 3, stride=2, scope='conv1')
                     conv1_1 = slim.conv2d(pad(conv1), 128, 3, scope='conv1_1')
                     conv2 = slim.conv2d(pad(conv1_1), 128, 3, stride=2, scope='conv2')
@@ -106,10 +117,10 @@ class FlowNetSD(Net):
                     flow = predict_flow2 * 0.05
                     # TODO: Look at Accum (train) or Resample (deploy) to see if we need to do something different
                     flow = tf.image.resize_bilinear(flow,
-                                                    tf.stack([height, width]),
+                                                    tf.stack([h, w]),
                                                     align_corners=True)
 
-                    return {
+                    self.result = {
                         'predict_flow6': predict_flow6,
                         'predict_flow5': predict_flow5,
                         'predict_flow4': predict_flow4,
@@ -117,6 +128,7 @@ class FlowNetSD(Net):
                         'predict_flow2': predict_flow2,
                         'flow': flow,
                     }
+
 
     def loss(self, flow, predictions):
         flow = flow * 20.0
