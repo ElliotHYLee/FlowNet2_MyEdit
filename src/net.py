@@ -38,35 +38,40 @@ class Net(object):
         """
         return
 
+    def getGoodInput(self, path):
+        input = imread(path)
+        input = input[...,[2,1,0]]
+        if input.max() > 1.0:
+            input = input /255.0
+        return input
+
     def test(self, checkpoint, input_a_path, input_b_path, out_path, save_image=True, save_flo=False):
-        input_a = imread(input_a_path)
-        input_b = imread(input_b_path)
+        input_a = self.getGoodInput(input_a_path)
+        input_b = self.getGoodInput(input_b_path)
 
-        # Convert from RGB -> BGR
-        input_a = input_a[..., [2, 1, 0]]
-        input_b = input_b[..., [2, 1, 0]]
-
-        # Scale from [0, 255] -> [0.0, 1.0] if needed
-        if input_a.max() > 1.0:
-            input_a = input_a / 255.0
-        if input_b.max() > 1.0:
-            input_b = input_b / 255.0
-
-        # TODO: This is a hack, we should get rid of this
-        training_schedule = LONG_SCHEDULE
-
+        print (input_a.shape)
         inputs = {
             'input_a': tf.expand_dims(tf.constant(input_a, dtype=tf.float32), 0),
             'input_b': tf.expand_dims(tf.constant(input_b, dtype=tf.float32), 0),
         }
-        predictions = self.model(inputs, training_schedule)
+
+        concat_inputs = tf.concat([inputs['input_a'], inputs['input_b']], axis=3)
+        print ("cp1")
+        print (concat_inputs.shape.as_list())
+
+        predictions = self.model(inputs, LONG_SCHEDULE)
         pred_flow = predictions['flow']
 
         saver = tf.train.Saver()
 
         with tf.Session() as sess:
             saver.restore(sess, checkpoint)
-            pred_flow = sess.run(pred_flow)[0, :, :, :]
+            print (self.model)
+            pred_flow = sess.run(pred_flow, feed_dict = {self.model.X: concat_inputs})
+            print (pred_flow.shape)
+            pred_flow = pred_flow[0, :, :, :]
+            print (pred_flow.shape)
+
 
             unique_name = 'flow-' + str(uuid.uuid4())
             if save_image:
@@ -77,6 +82,16 @@ class Net(object):
             if save_flo:
                 full_out_path = os.path.join(out_path, unique_name + '.flo')
                 write_flow(pred_flow, full_out_path)
+
+
+
+
+
+
+
+
+
+
 
     def train(self, log_dir, training_schedule, input_a, input_b, flow, checkpoints=None):
         tf.summary.image("image_a", input_a, max_outputs=2)
