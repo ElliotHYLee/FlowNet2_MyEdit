@@ -11,9 +11,14 @@ class FlowNetSD(Net):
     def __init__(self, mode=Mode.TRAIN, debug=False):
         super(FlowNetSD, self).__init__(mode=mode, debug=debug)
 
+
+
     def model(self, inputs, training_schedule, trainable=True):
-        _, height, width, _ = inputs['input_a'].shape.as_list()
-        self.X = tf.placeholder(tf.float32, [1, 384, 512, 6])
+        self.input_a = tf.placeholder(tf.float32, [384, 512, 3])
+        self.input_b = tf.placeholder(tf.float32, [384, 512, 3])
+        self.X1 = tf.expand_dims(self.input_a, 0)
+        self.X2 = tf.expand_dims(self.input_b, 0)
+        self.X = concat_inputs = tf.concat([self.X1, self.X2], axis=3)
         with tf.variable_scope('FlowNetSD'):
             #concat_inputs = tf.concat([inputs['input_a'], inputs['input_b']], axis=3)
 

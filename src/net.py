@@ -46,32 +46,19 @@ class Net(object):
         return input
 
     def test(self, checkpoint, input_a_path, input_b_path, out_path, save_image=True, save_flo=False):
-        input_a = self.getGoodInput(input_a_path)
-        input_b = self.getGoodInput(input_b_path)
 
-        print (input_a.shape)
-        inputs = {
-            'input_a': tf.expand_dims(tf.constant(input_a, dtype=tf.float32), 0),
-            'input_b': tf.expand_dims(tf.constant(input_b, dtype=tf.float32), 0),
-        }
-
-        concat_inputs = tf.concat([inputs['input_a'], inputs['input_b']], axis=3)
-        print ("cp1")
-        print (concat_inputs.shape.as_list())
-
-        predictions = self.model(inputs, LONG_SCHEDULE)
-        pred_flow = predictions['flow']
+        model = self.model(None, LONG_SCHEDULE)
+        pred_flow = model['flow']
 
         saver = tf.train.Saver()
 
         with tf.Session() as sess:
-            saver.restore(sess, checkpoint)
-            print (self.model)
-            pred_flow = sess.run(pred_flow, feed_dict = {self.model.X: concat_inputs})
-            print (pred_flow.shape)
-            pred_flow = pred_flow[0, :, :, :]
-            print (pred_flow.shape)
+            input_a = self.getGoodInput(input_a_path)
+            input_b = self.getGoodInput(input_b_path)
 
+            saver.restore(sess, checkpoint)
+            pred_flow = sess.run(pred_flow, feed_dict = {self.input_a: input_a, self.input_b: input_b})
+            pred_flow = pred_flow[0, :, :, :]
 
             unique_name = 'flow-' + str(uuid.uuid4())
             if save_image:
