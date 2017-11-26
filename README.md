@@ -1,8 +1,3 @@
-Originally from 
-
-https://github.com/sampepose/flownet2-tf
-
-
 ## FlowNet2 (TensorFlow)
 
 This repo contains FlowNet2[1] for TensorFlow. It includes FlowNetC, S, CS, CSS, CSS-ft-sd, SD, and 2.
