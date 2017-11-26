@@ -51,24 +51,28 @@ class Net(object):
         pred_flow = model['flow']
 
         saver = tf.train.Saver()
-        
+        dirPath = "/media/el/Data/KITTI/odom/dataset/sequences/00/res_2/"
+
         with tf.Session() as sess:
-            input_a = self.getGoodInput(input_a_path)
-            input_b = self.getGoodInput(input_b_path)
 
-            saver.restore(sess, checkpoint)
-            pred_flow = sess.run(pred_flow, feed_dict = {self.input_a: input_a, self.input_b: input_b})
-            pred_flow = pred_flow[0, :, :, :]
+            for i in range (1, 100):
+                fNameA = dirPath + str(i-1) + ".png"
+                fNameB = dirPath + str(i) + ".png"
+                input_a = self.getGoodInput(fNameA)
+                input_b = self.getGoodInput(fNameB)
 
-            unique_name = 'flow-' + str(uuid.uuid4())
-            if save_image:
-                flow_img = flow_to_image(pred_flow)
-                full_out_path = os.path.join(out_path, unique_name + '.png')
-                imsave(full_out_path, flow_img)
+                saver.restore(sess, checkpoint)
+                result = sess.run(pred_flow, feed_dict = {self.input_a: input_a, self.input_b: input_b})
+                result = result[0, :, :, :]
 
-            if save_flo:
-                full_out_path = os.path.join(out_path, unique_name + '.flo')
-                write_flow(pred_flow, full_out_path)
+                if save_image:
+                    flow_img = flow_to_image(result)
+                    full_out_path = os.path.join(out_path, str(i) + '.png')
+                    imsave(full_out_path, flow_img)
+
+                if save_flo:
+                    full_out_path = os.path.join(out_path, str(i) + '.flo')
+                    write_flow(result, full_out_path)
 
 
 
