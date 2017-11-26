@@ -13,8 +13,8 @@ def main():
     # Train on the data
     net.test(
         checkpoint='./checkpoints/FlowNetSD/flownet-SD.ckpt-0',
-        input_a_path=FLAGS.input_a,
-        input_b_path=FLAGS.input_b,
+        input_a_path='whatever1',
+        input_b_path='whatever2',
         out_path=FLAGS.out,
     )
 
@@ -42,10 +42,10 @@ if __name__ == '__main__':
     FLAGS = parser.parse_args()
 
     # Verify arguments are valid
-    if not os.path.exists(FLAGS.input_a):
-        raise ValueError('image_a path must exist')
-    if not os.path.exists(FLAGS.input_b):
-        raise ValueError('image_b path must exist')
-    if not os.path.isdir(FLAGS.out):
-        raise ValueError('out directory must exist')
+    # if not os.path.exists(FLAGS.input_a):
+    #     raise ValueError('image_a path must exist')
+    # if not os.path.exists(FLAGS.input_b):
+    #     raise ValueError('image_b path must exist')
+    # if not os.path.isdir(FLAGS.out):
+    #     raise ValueError('out directory must exist')
     main()

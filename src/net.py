@@ -46,16 +46,13 @@ class Net(object):
         return input
 
     def test(self, checkpoint, input_a_path, input_b_path, out_path, save_image=True, save_flo=False):
-
-        model = self.model(None, LONG_SCHEDULE)
-        pred_flow = model['flow']
+        pred_flow = self.result['flow']
 
         saver = tf.train.Saver()
         dirPath = "/media/el/Data/KITTI/odom/dataset/sequences/00/res_2/"
 
         with tf.Session() as sess:
-
-            for i in range (1, 100):
+            for i in range (1, 10):
                 fNameA = dirPath + str(i-1) + ".png"
                 fNameB = dirPath + str(i) + ".png"
                 input_a = self.getGoodInput(fNameA)
@@ -73,14 +70,6 @@ class Net(object):
                 if save_flo:
                     full_out_path = os.path.join(out_path, str(i) + '.flo')
                     write_flow(result, full_out_path)
-
-
-
-
-
-
-
-
 
 
 

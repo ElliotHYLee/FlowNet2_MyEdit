@@ -3,6 +3,7 @@ from ..utils import LeakyReLU, average_endpoint_error, pad, antipad
 from ..downsample import downsample
 import math
 import tensorflow as tf
+from ..training_schedules import LONG_SCHEDULE
 slim = tf.contrib.slim
 
 
@@ -10,12 +11,15 @@ class FlowNetSD(Net):
 
     def __init__(self, mode=Mode.TRAIN, debug=False):
         super(FlowNetSD, self).__init__(mode=mode, debug=debug)
-
+        self.model(None, LONG_SCHEDULE)
 
 
     def model(self, inputs, training_schedule, trainable=True):
-        self.input_a = tf.placeholder(tf.float32, [384, 512, 3])
-        self.input_b = tf.placeholder(tf.float32, [384, 512, 3])
+        w = 512
+        h = 384
+        c = 3
+        self.input_a = tf.placeholder(tf.float32, [h, w, c])
+        self.input_b = tf.placeholder(tf.float32, [h, w, c])
         self.X1 = tf.expand_dims(self.input_a, 0)
         self.X2 = tf.expand_dims(self.input_b, 0)
         self.X = concat_inputs = tf.concat([self.X1, self.X2], axis=3)
@@ -113,10 +117,10 @@ class FlowNetSD(Net):
                     flow = predict_flow2 * 0.05
                     # TODO: Look at Accum (train) or Resample (deploy) to see if we need to do something different
                     flow = tf.image.resize_bilinear(flow,
-                                                    tf.stack([384, 512]),
+                                                    tf.stack([h, w]),
                                                     align_corners=True)
 
-                    return {
+                    self.result = {
                         'predict_flow6': predict_flow6,
                         'predict_flow5': predict_flow5,
                         'predict_flow4': predict_flow4,
@@ -124,6 +128,7 @@ class FlowNetSD(Net):
                         'predict_flow2': predict_flow2,
                         'flow': flow,
                     }
+
 
     def loss(self, flow, predictions):
         flow = flow * 20.0
