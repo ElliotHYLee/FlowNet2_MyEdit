@@ -15,8 +15,8 @@ class FlowNetSD(Net):
 
 
     def model(self, inputs, training_schedule, trainable=True):
-        w = 512
-        h = 384
+        w = 512#1241
+        h = 384#376
         c = 3
         self.input_a = tf.placeholder(tf.float32, [h, w, c])
         self.input_b = tf.placeholder(tf.float32, [h, w, c])
@@ -24,7 +24,7 @@ class FlowNetSD(Net):
         self.X2 = tf.expand_dims(self.input_b, 0)
         self.X = concat_inputs = tf.concat([self.X1, self.X2], axis=3)
         with tf.variable_scope('FlowNetSD'):
-            #concat_inputs = tf.concat([inputs['input_a'], inputs['input_b']], axis=3)
+            print ("im here 1 ----------------------------------------------------")
 
             with slim.arg_scope([slim.conv2d, slim.conv2d_transpose],
                                 # Only backprop this network if trainable
@@ -34,10 +34,12 @@ class FlowNetSD(Net):
                                 activation_fn=LeakyReLU,
                                 # We will do our own padding to match the original Caffe code
                                 padding='VALID'):
-
+                print ("im here 2 ----------------------------------------------------")
                 weights_regularizer = slim.l2_regularizer(training_schedule['weight_decay'])
                 with slim.arg_scope([slim.conv2d], weights_regularizer=weights_regularizer):
                     conv0 = slim.conv2d(pad(self.X), 64, 3, scope='conv0')
+                    #conv0 output = (192, 256, 64)
+                    print ("im here 3 ----------------------------------------------------")
                     conv1 = slim.conv2d(pad(conv0), 64, 3, stride=2, scope='conv1')
                     conv1_1 = slim.conv2d(pad(conv1), 128, 3, scope='conv1_1')
                     conv2 = slim.conv2d(pad(conv1_1), 128, 3, stride=2, scope='conv2')
@@ -50,68 +52,51 @@ class FlowNetSD(Net):
                     conv5_1 = slim.conv2d(pad(conv5), 512, 3, scope='conv5_1')
                     conv6 = slim.conv2d(pad(conv5_1), 1024, 3, stride=2, scope='conv6')
                     conv6_1 = slim.conv2d(pad(conv6), 1024, 3, scope='conv6_1')
+                    print ("im here 4 ----------------------------------------------------")
 
                     """ START: Refinement Network """
                     with slim.arg_scope([slim.conv2d_transpose], biases_initializer=None):
-                        predict_flow6 = slim.conv2d(pad(conv6_1), 2, 3,
-                                                    scope='predict_flow6',
-                                                    activation_fn=None)
-                        deconv5 = antipad(slim.conv2d_transpose(conv6_1, 512, 4,
-                                                                stride=2,
-                                                                scope='deconv5'))
+                        predict_flow6 = slim.conv2d(pad(conv6_1), 2, 3, scope='predict_flow6', activation_fn=None)
+                        deconv5 = antipad(slim.conv2d_transpose(conv6_1, 512, 4, stride=2, scope='deconv5'))
                         upsample_flow6to5 = antipad(slim.conv2d_transpose(predict_flow6, 2, 4,
                                                                           stride=2,
                                                                           scope='upsample_flow6to5',
                                                                           activation_fn=None))
+                        print ("im here 4_1 ----------------------------------------------------")
                         concat5 = tf.concat([conv5_1, deconv5, upsample_flow6to5], axis=3)
-                        interconv5 = slim.conv2d(pad(concat5), 512, 3,
-                                                 activation_fn=None, scope='interconv5')
+                        print ("im here 4_2 ----------------------------------------------------")
+                        interconv5 = slim.conv2d(pad(concat5), 512, 3, activation_fn=None, scope='interconv5')
 
-                        predict_flow5 = slim.conv2d(pad(interconv5), 2, 3,
-                                                    scope='predict_flow5',
-                                                    activation_fn=None)
-                        deconv4 = antipad(slim.conv2d_transpose(concat5, 256, 4,
-                                                                stride=2,
-                                                                scope='deconv4'))
+                        predict_flow5 = slim.conv2d(pad(interconv5), 2, 3, scope='predict_flow5', activation_fn=None)
+                        deconv4 = antipad(slim.conv2d_transpose(concat5, 256, 4, stride=2, scope='deconv4'))
                         upsample_flow5to4 = antipad(slim.conv2d_transpose(predict_flow5, 2, 4,
                                                                           stride=2,
                                                                           scope='upsample_flow5to4',
                                                                           activation_fn=None))
                         concat4 = tf.concat([conv4_1, deconv4, upsample_flow5to4], axis=3)
-                        interconv4 = slim.conv2d(pad(concat4), 256, 3,
-                                                 activation_fn=None, scope='interconv4')
+                        interconv4 = slim.conv2d(pad(concat4), 256, 3, activation_fn=None, scope='interconv4')
 
-                        predict_flow4 = slim.conv2d(pad(interconv4), 2, 3,
-                                                    scope='predict_flow4',
-                                                    activation_fn=None)
-                        deconv3 = antipad(slim.conv2d_transpose(concat4, 128, 4,
-                                                                stride=2,
-                                                                scope='deconv3'))
+                        predict_flow4 = slim.conv2d(pad(interconv4), 2, 3, scope='predict_flow4', activation_fn=None)
+                        deconv3 = antipad(slim.conv2d_transpose(concat4, 128, 4, stride=2, scope='deconv3'))
                         upsample_flow4to3 = antipad(slim.conv2d_transpose(predict_flow4, 2, 4,
                                                                           stride=2,
                                                                           scope='upsample_flow4to3',
                                                                           activation_fn=None))
                         concat3 = tf.concat([conv3_1, deconv3, upsample_flow4to3], axis=3)
-                        interconv3 = slim.conv2d(pad(concat3), 128, 3,
-                                                 activation_fn=None, scope='interconv3')
+                        interconv3 = slim.conv2d(pad(concat3), 128, 3, activation_fn=None, scope='interconv3')
 
-                        predict_flow3 = slim.conv2d(pad(interconv3), 2, 3,
-                                                    scope='predict_flow3',
-                                                    activation_fn=None)
-                        deconv2 = antipad(slim.conv2d_transpose(concat3, 64, 4,
-                                                                stride=2,
-                                                                scope='deconv2'))
+                        predict_flow3 = slim.conv2d(pad(interconv3), 2, 3, scope='predict_flow3', activation_fn=None)
+                        deconv2 = antipad(slim.conv2d_transpose(concat3, 64, 4, stride=2, scope='deconv2'))
                         upsample_flow3to2 = antipad(slim.conv2d_transpose(predict_flow3, 2, 4,
                                                                           stride=2,
                                                                           scope='upsample_flow3to2',
                                                                           activation_fn=None))
+                        print ("im here 5 ----------------------------------------------------")
                         concat2 = tf.concat([conv2, deconv2, upsample_flow3to2], axis=3)
-                        interconv2 = slim.conv2d(pad(concat2), 64, 3,
-                                                 activation_fn=None, scope='interconv2')
+                        print ("im here 6 ----------------------------------------------------")
+                        interconv2 = slim.conv2d(pad(concat2), 64, 3, activation_fn=None, scope='interconv2')
 
-                        predict_flow2 = slim.conv2d(pad(interconv2), 2, 3,
-                                                    scope='predict_flow2',
-                                                    activation_fn=None)
+                        predict_flow2 = slim.conv2d(pad(interconv2), 2, 3, scope='predict_flow2', activation_fn=None)
                     """ END: Refinement Network """
 
                     flow = predict_flow2 * 0.05
