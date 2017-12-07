@@ -1,3 +1,20 @@
+This is based on  https://github.com/sampepose/flownet2-tf
+
+
+To test my version
+
+python -m src.flownet_sd.test --input_a a --input_b b --out ./output
+
+
+
+
+
+
+
+
+
+
+
 ## FlowNet2 (TensorFlow)
 
 This repo contains FlowNet2[1] for TensorFlow. It includes FlowNetC, S, CS, CSS, CSS-ft-sd, SD, and 2.
