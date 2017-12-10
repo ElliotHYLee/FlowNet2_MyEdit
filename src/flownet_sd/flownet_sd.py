@@ -126,6 +126,9 @@ class FlowNetSD(Net):
                     # TODO: Look at Accum (train) or Resample (deploy) to see if we need to do something different
                     flow = tf.image.resize_bilinear(flow, tf.stack([h, w]), align_corners=True)
 
+                    convOut = conv6_1[0,:,:,:]
+                    #convOut = tf.contrib.layers.flatten(convOut)
+                    convOut = tf.reshape(convOut, [-1])
                     self.result = {
                         'predict_flow6': predict_flow6,
                         'predict_flow5': predict_flow5,
@@ -133,6 +136,7 @@ class FlowNetSD(Net):
                         'predict_flow3': predict_flow3,
                         'predict_flow2': predict_flow2,
                         'flow': flow,
+                        'convOut': convOut,
                     }
 
 

@@ -49,18 +49,22 @@ class Net(object):
         pred_flow = self.result['flow']
 
         saver = tf.train.Saver()
-        dirPath = "/media/el/Data/DLData/KITTI/odom/dataset/sequences/00/res_2_2/"
+        dirPath = "/media/el/Data/DLData/KITTI/odom/dataset/sequences/00/res_2_2_1152_320/"
 
         with tf.Session() as sess:
             saver.restore(sess, checkpoint)
-            for i in range (1, 4501):
+            for i in range (1, 2):
                 fNameA = dirPath + str(i-1) + ".png"
                 fNameB = dirPath + str(i) + ".png"
                 input_a = self.getGoodInput(fNameA)
                 input_b = self.getGoodInput(fNameB)
 
-                result = sess.run(pred_flow, feed_dict = {self.input_a: input_a, self.input_b: input_b})
+                result, convOut = sess.run([pred_flow, self.result['convOut']], feed_dict = {self.input_a: input_a, self.input_b: input_b})
                 result = result[0, :, :, :]
+
+                #convOut = convOut[0,:,:,:]
+                #print(convOut.shape)
+                #print(convOut)
 
                 if save_image:
                     flow_img = flow_to_image(result)

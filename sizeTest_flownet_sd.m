@@ -1,7 +1,9 @@
 clc, clear, close all
 
-nH = 512;
-nV = 384;
+% nH = 512;
+% nV = 384;
+nH = 1152
+nV = 320
 
 
 %% flownet_SD
@@ -54,7 +56,7 @@ nH2_1_out = getOutputSize(nH2_out, p, s, f);
 fprintf('conv2_1, dim: (%d, %d, %d)\n', nV2_1_out, nH2_1_out, c2_1)
 
 % conv3
-p = 2;
+p = 1;
 s = 2;
 f = 3;
 c3_out = 256;
@@ -121,9 +123,9 @@ p = 1;
 s = 1;
 f = 3;
 c6_1_out = 1024;
-nV6_out = getOutputSize(nV5_1_out, p, s, f);
-nH6_out = getOutputSize(nH5_1_out, p, s, f);
-fprintf('conv6_1, dim: (%d, %d, %d)\n', nV6_out, nH6_out, c6_out)
+nV6_out_1 = getOutputSize(nV6_out, p, s, f);
+nH6_out_1 = getOutputSize(nH6_out, p, s, f);
+fprintf('conv6_1, dim: (%d, %d, %d)\n', nV6_out_1, nH6_out_1, c6_1_out)
 
 
 
