@@ -51,9 +51,7 @@ class FlowNetS(Net):
 
                     """ START: Refinement Network """
                     with slim.arg_scope([slim.conv2d_transpose], biases_initializer=None):
-                        predict_flow6 = slim.conv2d(pad(conv6_1), 2, 3,
-                                                    scope='predict_flow6',
-                                                    activation_fn=None)
+                        predict_flow6 = slim.conv2d(pad(conv6_1), 2, 3, scope='predict_flow6', activation_fn=None)
                         deconv5 = antipad(slim.conv2d_transpose(conv6_1, 512, 4,
                                                                 stride=2,
                                                                 scope='deconv5'))

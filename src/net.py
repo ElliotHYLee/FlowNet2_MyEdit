@@ -45,15 +45,15 @@ class Net(object):
             input = input /255.0
         return input
 
-    def test(self, checkpoint, input_a_path, input_b_path, out_path, save_image=True, save_flo=True):
+    def test(self, checkpoint, input_a_path, input_b_path, out_path, save_image=True, save_flo=False):
         pred_flow = self.result['flow']
 
         saver = tf.train.Saver()
-        dirPath = "/media/el/Data/DLData/KITTI/odom/dataset/sequences/00/res_2/"
+        dirPath = "/media/el/Data/DLData/KITTI/odom/dataset/sequences/00/res_2_2/"
 
         with tf.Session() as sess:
             saver.restore(sess, checkpoint)
-            for i in range (1, 5):
+            for i in range (1, 4501):
                 fNameA = dirPath + str(i-1) + ".png"
                 fNameB = dirPath + str(i) + ".png"
                 input_a = self.getGoodInput(fNameA)

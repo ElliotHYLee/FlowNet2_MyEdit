@@ -15,8 +15,8 @@ class FlowNetSD(Net):
 
 
     def model(self, inputs, training_schedule, trainable=True):
-        w = 512#1241
-        h = 384#376
+        w = 1152#512
+        h = 320#384
         c = 3
         self.input_a = tf.placeholder(tf.float32, [h, w, c])
         self.input_b = tf.placeholder(tf.float32, [h, w, c])
@@ -42,28 +42,42 @@ class FlowNetSD(Net):
                     print ("im here 3 ----------------------------------------------------")
                     conv1 = slim.conv2d(pad(conv0), 64, 3, stride=2, scope='conv1')
                     conv1_1 = slim.conv2d(pad(conv1), 128, 3, scope='conv1_1')
+                    #print("conv1_1:")
+                    #print(conv1_1.get_shape())
                     conv2 = slim.conv2d(pad(conv1_1), 128, 3, stride=2, scope='conv2')
+                    #print("conv2:")
+                    #print(conv2.get_shape())
                     conv2_1 = slim.conv2d(pad(conv2), 128, 3, scope='conv2_1')
+                    #print("conv2_1:")
+                    #print(conv2_1.get_shape())
                     conv3 = slim.conv2d(pad(conv2_1), 256, 3, stride=2, scope='conv3')
+                    #print("conv3:")
+                    #print(conv3.get_shape())
                     conv3_1 = slim.conv2d(pad(conv3), 256, 3, scope='conv3_1')
+                    #print("conv3_1:")
+                    #print(conv3_1.get_shape())
                     conv4 = slim.conv2d(pad(conv3_1), 512, 3, stride=2, scope='conv4')
                     conv4_1 = slim.conv2d(pad(conv4), 512, 3, scope='conv4_1')
+                    #print(conv4_1.get_shape())
                     conv5 = slim.conv2d(pad(conv4_1), 512, 3, stride=2, scope='conv5')
                     conv5_1 = slim.conv2d(pad(conv5), 512, 3, scope='conv5_1')
+                    #print(conv5_1.get_shape())
                     conv6 = slim.conv2d(pad(conv5_1), 1024, 3, stride=2, scope='conv6')
                     conv6_1 = slim.conv2d(pad(conv6), 1024, 3, scope='conv6_1')
+                    #print(conv6_1.get_shape())
                     print ("im here 4 ----------------------------------------------------")
 
                     """ START: Refinement Network """
                     with slim.arg_scope([slim.conv2d_transpose], biases_initializer=None):
-                        predict_flow6 = slim.conv2d(pad(conv6_1), 2, 3, scope='predict_flow6', activation_fn=None)
                         deconv5 = antipad(slim.conv2d_transpose(conv6_1, 512, 4, stride=2, scope='deconv5'))
-                        upsample_flow6to5 = antipad(slim.conv2d_transpose(predict_flow6, 2, 4,
-                                                                          stride=2,
-                                                                          scope='upsample_flow6to5',
-                                                                          activation_fn=None))
+                        predict_flow6 = slim.conv2d(pad(conv6_1), 2, 3, scope='predict_flow6', activation_fn=None)
+                        upsample_flow6to5 = antipad(slim.conv2d_transpose(predict_flow6, 2, 4, stride=2, scope='upsample_flow6to5', activation_fn=None))
                         print ("im here 4_1 ----------------------------------------------------")
+                        print(conv5_1.get_shape())
+                        print(deconv5.get_shape())
+                        print(upsample_flow6to5.get_shape())
                         concat5 = tf.concat([conv5_1, deconv5, upsample_flow6to5], axis=3)
+
                         print ("im here 4_2 ----------------------------------------------------")
                         interconv5 = slim.conv2d(pad(concat5), 512, 3, activation_fn=None, scope='interconv5')
 
@@ -82,6 +96,11 @@ class FlowNetSD(Net):
                                                                           stride=2,
                                                                           scope='upsample_flow4to3',
                                                                           activation_fn=None))
+
+                        print ("im here 5 ----------------------------------------------------")
+                        print(conv3_1.get_shape())
+                        print(deconv3.get_shape())
+                        print(upsample_flow4to3.get_shape())
                         concat3 = tf.concat([conv3_1, deconv3, upsample_flow4to3], axis=3)
                         interconv3 = slim.conv2d(pad(concat3), 128, 3, activation_fn=None, scope='interconv3')
 
@@ -91,8 +110,12 @@ class FlowNetSD(Net):
                                                                           stride=2,
                                                                           scope='upsample_flow3to2',
                                                                           activation_fn=None))
-                        print ("im here 5 ----------------------------------------------------")
+                        print ("im here 6 ----------------------------------------------------")
+                        print(conv2.get_shape())
+                        print(deconv2.get_shape())
+                        print(upsample_flow3to2.get_shape())
                         concat2 = tf.concat([conv2, deconv2, upsample_flow3to2], axis=3)
+
                         print ("im here 6 ----------------------------------------------------")
                         interconv2 = slim.conv2d(pad(concat2), 64, 3, activation_fn=None, scope='interconv2')
 
@@ -101,9 +124,7 @@ class FlowNetSD(Net):
 
                     flow = predict_flow2 * 0.05
                     # TODO: Look at Accum (train) or Resample (deploy) to see if we need to do something different
-                    flow = tf.image.resize_bilinear(flow,
-                                                    tf.stack([h, w]),
-                                                    align_corners=True)
+                    flow = tf.image.resize_bilinear(flow, tf.stack([h, w]), align_corners=True)
 
                     self.result = {
                         'predict_flow6': predict_flow6,
