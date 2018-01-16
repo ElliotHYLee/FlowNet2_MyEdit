@@ -144,6 +144,26 @@ def write_flow(flow, filename):
     flow.tofile(f)
     f.close()
 
+def read_convOut(filename):
+    """
+    read convOut
+    :param filename: name of the flow file
+    :return: convOut data in matrix
+    """
+    convOut = np.fromfile(filename, dtype='float32')
+    convOut = convOut.reshape(-1,92160)
+    return convOut
+
+
+def write_convOut(convOutList, filename):
+    """
+    write convOut
+    :param convOut: convolution output
+    :param filename: optical flow file path to be saved
+    :return: None
+    """
+    npa = np.asarray(convOutList, dtype=np.float32)
+    npa.astype('float32').tofile(filename)
 
 def segment_flow(flow):
     h = flow.shape[0]

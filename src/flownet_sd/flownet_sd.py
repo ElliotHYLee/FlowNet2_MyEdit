@@ -22,7 +22,10 @@ class FlowNetSD(Net):
         self.input_b = tf.placeholder(tf.float32, [h, w, c])
         self.X1 = tf.expand_dims(self.input_a, 0)
         self.X2 = tf.expand_dims(self.input_b, 0)
-        self.X = concat_inputs = tf.concat([self.X1, self.X2], axis=3)
+        self.X = tf.concat([self.X1, self.X2], axis=3)
+
+        print (self.X.get_shape())
+
         with tf.variable_scope('FlowNetSD'):
             print ("im here 1 ----------------------------------------------------")
 

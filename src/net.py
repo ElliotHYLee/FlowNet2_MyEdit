@@ -2,7 +2,7 @@ import abc
 from enum import Enum
 import os
 import tensorflow as tf
-from .flowlib import flow_to_image, write_flow
+from .flowlib import flow_to_image, write_flow, write_convOut, read_convOut
 import numpy as np
 from scipy.misc import imread, imsave
 import uuid
@@ -51,9 +51,15 @@ class Net(object):
         saver = tf.train.Saver()
         dirPath = "/media/el/Data/DLData/KITTI/odom/dataset/sequences/00/res_2_2_1152_320/"
 
+        convOutList = []
+
         with tf.Session() as sess:
             saver.restore(sess, checkpoint)
-            for i in range (1, 2):
+
+
+
+            
+            for i in range (1, 2501):
                 fNameA = dirPath + str(i-1) + ".png"
                 fNameB = dirPath + str(i) + ".png"
                 input_a = self.getGoodInput(fNameA)
@@ -66,14 +72,26 @@ class Net(object):
                 #print(convOut.shape)
                 #print(convOut)
 
-                if save_image:
-                    flow_img = flow_to_image(result)
-                    full_out_path = os.path.join(out_path, str(i) + '.png')
-                    imsave(full_out_path, flow_img)
+                convOutList.append(convOut.tolist())
+                # print (len(convOutList))
+                # if save_image:
+                #     flow_img = flow_to_image(result)
+                #     full_out_path = os.path.join(out_path, str(i) + '.png')
+                #     imsave(full_out_path, flow_img)
+                #
+                # if save_flo:
+                #     full_out_path = os.path.join(out_path, str(i) + '.flo')
+                #     write_flow(result, full_out_path)
+                if (i%100==0):
+                    print(str(i) + " is processed.")
+            print (len(convOutList))
+            print (len(convOutList[0]))
+            full_out_path = os.path.join(out_path,  'convOut.myConv')
+            write_convOut(convOutList, full_out_path)
 
-                if save_flo:
-                    full_out_path = os.path.join(out_path, str(i) + '.flo')
-                    write_flow(result, full_out_path)
+            data = read_convOut(full_out_path)
+            print(data.shape)
+
 
     def train(self, log_dir, training_schedule, input_a, input_b, flow, checkpoints=None):
         tf.summary.image("image_a", input_a, max_outputs=2)
