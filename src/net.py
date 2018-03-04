@@ -8,7 +8,9 @@ from scipy.misc import imread, imsave
 import uuid
 from .training_schedules import LONG_SCHEDULE
 slim = tf.contrib.slim
-
+import numpy as np
+import sys
+import cv2
 
 class Mode(Enum):
     TRAIN = 1
@@ -55,11 +57,16 @@ class Net(object):
 
         with tf.Session() as sess:
             saver.restore(sess, checkpoint)
+            allLayers = sess.run(tf.trainable_variables())
+            allLayers = np.array(allLayers)
+            print 'shape of allLayers:'
+            print allLayers.shape
+            np.save('FlowNetSD_weights', allLayers)
 
 
+            #print wt[0]
 
-            
-            for i in range (1, 2501):
+            for i in range (1, 2):
                 fNameA = dirPath + str(i-1) + ".png"
                 fNameB = dirPath + str(i) + ".png"
                 input_a = self.getGoodInput(fNameA)
@@ -84,6 +91,7 @@ class Net(object):
                 #     write_flow(result, full_out_path)
                 if (i%100==0):
                     print(str(i) + " is processed.")
+            flow_img = flow_to_image(result)
             print (len(convOutList))
             print (len(convOutList[0]))
             full_out_path = os.path.join(out_path,  'convOut.myConv')
@@ -91,7 +99,8 @@ class Net(object):
 
             data = read_convOut(full_out_path)
             print(data.shape)
-
+            cv2.imshow('d', flow_img)
+            cv2.waitKey(5000)
 
     def train(self, log_dir, training_schedule, input_a, input_b, flow, checkpoints=None):
         tf.summary.image("image_a", input_a, max_outputs=2)
